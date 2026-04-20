@@ -11,18 +11,26 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#07070d;min-height:100vh}
-  ::-webkit-scrollbar{width:3px}
-  ::-webkit-scrollbar-thumb{background:rgba(245,158,11,.3)}
+  ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(245,158,11,.3)}
   .rw:hover{background:rgba(245,158,11,.06)!important}
   .rw:hover .dx{opacity:1!important}
   .chip{cursor:pointer;transition:all .18s;border:none;font-family:inherit}
   .chip:hover{transform:translateY(-2px)}
-  input:focus,select:focus{border-color:rgba(245,158,11,.5)!important;outline:none}
+  .fi{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:6px;
+    padding:8px 10px;color:#e8e8f0;font-size:12px;outline:none;font-family:'DM Sans',sans-serif;transition:border-color .15s,background .15s}
+  .fi:focus{border-color:rgba(245,158,11,.6)!important;background:rgba(245,158,11,.05)}
+  .xbtn{border:none;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;
+    transition:all .18s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px}
+  .xbtn:hover{transform:translateY(-1px);opacity:.9}
   button{cursor:pointer;font-family:inherit}
   @keyframes cf{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(800deg);opacity:0}}
   .cfp{position:fixed;pointer-events:none;z-index:999;animation:cf 3.2s ease-in forwards}
   @keyframes gl{0%,100%{box-shadow:0 0 24px rgba(245,158,11,.12)}50%{box-shadow:0 0 50px rgba(245,158,11,.38)}}
   .glow{animation:gl 2.8s ease-in-out infinite}
+  @keyframes toast{0%{opacity:0;transform:translateY(10px)}15%,85%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-10px)}}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;border:1px solid rgba(52,211,153,.4);
+    color:#34d399;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;
+    animation:toast 2.5s ease forwards;z-index:1000;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -32,42 +40,37 @@ const { useState, useEffect, useRef } = React;
 
 const GOAL = 2000000;
 const PROJECTED = [
-  { source:"GoML", amount:1140000, color:"#f59e0b" },
-  { source:"Vaanii", amount:360000, color:"#34d399" },
-  { source:"Agri", amount:150000, color:"#60a5fa" },
-  { source:"Accenture", amount:111943, color:"#f472b6" },
+  {source:"GoML",     amount:1140000,color:"#f59e0b"},
+  {source:"Vaanii",   amount:360000, color:"#34d399"},
+  {source:"Agri",     amount:150000, color:"#60a5fa"},
+  {source:"Accenture",amount:111943, color:"#f472b6"},
 ];
 const MONTHS = ["April","May","June","July","August","September","October","November","December","January","February","March"];
 const INIT = [
-  {id:1,month:"April",income:"Vaanii",name:"Meena",amount:30000,account:"Union Bank"},
-  {id:2,month:"April",income:"Coco",name:"Meena",amount:26600,account:"CSB Bank"},
-  {id:3,month:"April",income:"Accenture",name:"Mani",amount:111943,account:"HDFC"},
-  {id:4,month:"April",income:"Tender coco",name:"Meena",amount:5250,account:"CSB Bank"},
-  {id:5,month:"April",income:"Tender coco",name:"Meena",amount:2100,account:"CSB Bank"},
+  {id:1,month:"April",income:"Vaanii",     name:"Meena",amount:30000, account:"Union Bank"},
+  {id:2,month:"April",income:"Coco",       name:"Meena",amount:26600, account:"CSB Bank"},
+  {id:3,month:"April",income:"Accenture",  name:"Mani", amount:111943,account:"HDFC"},
+  {id:4,month:"April",income:"Tender coco",name:"Meena",amount:5250,  account:"CSB Bank"},
+  {id:5,month:"April",income:"Tender coco",name:"Meena",amount:2100,  account:"CSB Bank"},
 ];
 
-const fmt = n => "₹" + Number(n).toLocaleString("en-IN");
+const fmt  = n => "₹" + Number(n).toLocaleString("en-IN");
 const fmtC = n => n >= 100000 ? `₹${(n/100000).toFixed(1)}L` : `₹${(n/1000).toFixed(0)}K`;
 
-function AnimNum({ value }) {
-  const [d, setD] = useState(0);
-  const prev = useRef(0);
-  useEffect(() => {
-    const s = prev.current, e = value, t0 = performance.now();
-    const run = t => {
-      const p = Math.min((t-t0)/900,1), ease = 1-Math.pow(1-p,3);
-      setD(Math.round(s+(e-s)*ease));
-      if (p < 1) requestAnimationFrame(run); else prev.current = e;
-    };
+function AnimNum({value}) {
+  const [d,setD]=useState(0); const prev=useRef(0);
+  useEffect(()=>{
+    const s=prev.current,e=value,t0=performance.now();
+    const run=t=>{const p=Math.min((t-t0)/900,1),ez=1-Math.pow(1-p,3);setD(Math.round(s+(e-s)*ez));if(p<1)requestAnimationFrame(run);else prev.current=e;};
     requestAnimationFrame(run);
-  }, [value]);
+  },[value]);
   return <span>{fmt(d)}</span>;
 }
 
-function Ring({ pct, sz=120, sw=9, clr="#f59e0b" }) {
-  const r=(sz-sw)/2, circ=2*Math.PI*r;
-  const [dash, setDash] = useState(0);
-  useEffect(()=>{ const t=setTimeout(()=>setDash(circ*Math.min(pct/100,1)),200); return()=>clearTimeout(t); },[pct,circ]);
+function Ring({pct,sz=120,sw=9,clr="#f59e0b"}) {
+  const r=(sz-sw)/2,circ=2*Math.PI*r;
+  const [dash,setDash]=useState(0);
+  useEffect(()=>{const t=setTimeout(()=>setDash(circ*Math.min(pct/100,1)),200);return()=>clearTimeout(t);},[pct,circ]);
   return (
     <svg width={sz} height={sz} style={{transform:"rotate(-90deg)"}}>
       <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={sw}/>
@@ -78,75 +81,147 @@ function Ring({ pct, sz=120, sw=9, clr="#f59e0b" }) {
   );
 }
 
+/* AddForm outside App — fixes focus-loss-on-keystroke bug */
+function AddForm({form,setForm,onSave,months}) {
+  const ref=useRef(null);
+  useEffect(()=>{ref.current&&ref.current.focus();},[]);
+  const onKey=e=>{if(e.key==="Enter")onSave();};
+  const L=({c})=><div style={{fontSize:"9px",color:"rgba(255,255,255,.32)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:"5px",fontFamily:"'DM Mono',monospace"}}>{c}</div>;
+  return (
+    <div style={{background:"rgba(245,158,11,.04)",border:"1px solid rgba(245,158,11,.12)",borderRadius:"11px",padding:"16px",marginBottom:"16px",
+      display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(145px,1fr))",gap:"10px",alignItems:"end"}}>
+      <div><L c="Month"/><select className="fi" value={form.month} onChange={e=>setForm(f=>({...f,month:e.target.value}))} onKeyDown={onKey}>{months.map(m=><option key={m}>{m}</option>)}</select></div>
+      <div><L c="Income Source"/><input ref={ref} className="fi" type="text" placeholder="e.g. GoML" value={form.income} onChange={e=>setForm(f=>({...f,income:e.target.value}))} onKeyDown={onKey}/></div>
+      <div><L c="Name"/><input className="fi" type="text" placeholder="e.g. Meena" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} onKeyDown={onKey}/></div>
+      <div><L c="Amount (₹)"/><input className="fi" type="number" placeholder="e.g. 30000" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} onKeyDown={onKey}/></div>
+      <div><L c="Account"/><input className="fi" type="text" placeholder="e.g. Union Bank" value={form.account} onChange={e=>setForm(f=>({...f,account:e.target.value}))} onKeyDown={onKey}/></div>
+      <button onClick={onSave} style={{background:"linear-gradient(135deg,#d97706,#fbbf24)",border:"none",borderRadius:"7px",padding:"9px",color:"#07070d",fontWeight:700,fontSize:"12px"}}>✓ Save Entry</button>
+    </div>
+  );
+}
+
 function App() {
-  const [entries, setEntries] = useState(INIT);
-  const [month, setMonth] = useState("April");
-  const [showAdd, setShowAdd] = useState(false);
-  const [confetti, setConfetti] = useState(false);
-  const [form, setForm] = useState({month:"April",income:"",name:"",amount:"",account:""});
+  const [entries, setEntries]  = useState(INIT);
+  const [month,   setMonth]    = useState("April");
+  const [showAdd, setShowAdd]  = useState(false);
+  const [confetti,setConfetti] = useState(false);
+  const [toast,   setToast]    = useState("");
+  const [form,    setForm]     = useState({month:"April",income:"",name:"",amount:"",account:""});
 
-  const total = entries.reduce((s,e)=>s+e.amount,0);
-  const pct = (total/GOAL)*100;
-  const remaining = Math.max(0,GOAL-total);
-  const mE = entries.filter(e=>e.month===month);
-  const mT = mE.reduce((s,e)=>s+e.amount,0);
-  const projMax = PROJECTED.reduce((s,p)=>s+p.amount,0);
+  const total    = entries.reduce((s,e)=>s+e.amount,0);
+  const pct      = (total/GOAL)*100;
+  const remaining= Math.max(0,GOAL-total);
+  const mE       = entries.filter(e=>e.month===month);
+  const mT       = mE.reduce((s,e)=>s+e.amount,0);
+  const projMax  = PROJECTED.reduce((s,p)=>s+p.amount,0);
 
-  const add = () => {
+  const showToast = msg => { setToast(msg); setTimeout(()=>setToast(""),2500); };
+
+  const saveEntry = () => {
     if (!form.income||!form.amount) return;
     const prev = entries.reduce((s,e)=>s+e.amount,0);
-    const ne = {...form, id:Date.now(), amount:parseFloat(form.amount)};
-    const next = [...entries, ne];
+    const next = [...entries,{...form,id:Date.now(),amount:parseFloat(form.amount)}];
     setEntries(next);
-    if (next.reduce((s,e)=>s+e.amount,0)>=GOAL && prev<GOAL) {
-      setConfetti(true); setTimeout(()=>setConfetti(false),3500);
-    }
-    setForm({month, income:"", name:"", amount:"", account:""});
+    if (next.reduce((s,e)=>s+e.amount,0)>=GOAL&&prev<GOAL){setConfetti(true);setTimeout(()=>setConfetti(false),3500);}
+    setForm({month,income:"",name:"",amount:"",account:""});
     setShowAdd(false);
   };
 
-  const msg = pct>=100 ? {e:"🏆",t:"Goal Smashed!",s:"Legendary!"} :
-    pct>=75  ? {e:"🔥",t:"Almost there!",s:`${fmtC(remaining)} left`} :
-    pct>=50  ? {e:"⚡",t:"Halfway hero!",s:`${fmtC(remaining)} to go`} :
-    pct>=25  ? {e:"🚀",t:"Great momentum!",s:"Keep pushing!"} :
-               {e:"🌱",t:"Journey begins!",s:"Every ₹ counts"};
+  /* ── EXPORT CSV ── opens in Excel / Google Sheets */
+  const exportCSV = () => {
+    const rows = [
+      ["Month","Income Source","Name","Amount (₹)","Account"],
+      ...entries.map(e=>[e.month,e.income,e.name,e.amount,e.account]),
+      [],
+      ["--- SUMMARY ---"],
+      ["Goal (₹)",          GOAL],
+      ["Total Collected (₹)",total],
+      ["Remaining (₹)",     remaining],
+      ["Progress",          pct.toFixed(2)+"%"],
+      [],
+      ["--- PROJECTED ---"],
+      ["Source","Projected Amount (₹)"],
+      ...PROJECTED.map(p=>[p.source,p.amount]),
+    ];
+    const csv = rows.map(r=>r.join(",")).join("\n");
+    dl(new Blob(["\uFEFF"+csv,{type:"text/csv;charset=utf-8"}]),"FY2026-27_Finance.csv");
+    showToast("✓ CSV downloaded — open in Excel or Google Sheets");
+  };
 
-  const Field = ({k,label,type,placeholder,opts}) => (
-    <div>
-      <div style={{fontSize:"9px",color:"rgba(255,255,255,.3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:"4px",fontFamily:"'DM Mono',monospace"}}>{label}</div>
-      {type==="select"
-        ? <select value={form[k]} onChange={ev=>setForm({...form,[k]:ev.target.value})}
-            style={{width:"100%",background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",borderRadius:"6px",padding:"7px 8px",color:"#e8e8f0",fontSize:"12px",outline:"none"}}>
-            {opts.map(o=><option key={o}>{o}</option>)}
-          </select>
-        : <input type={type} placeholder={placeholder} value={form[k]}
-            onChange={ev=>setForm({...form,[k]:ev.target.value})}
-            style={{width:"100%",background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",borderRadius:"6px",padding:"7px 8px",color:"#e8e8f0",fontSize:"12px",outline:"none"}}/>
-      }
-    </div>
-  );
+  /* ── EXPORT JSON ── for developers / other tools */
+  const exportJSON = () => {
+    const data = {
+      financialYear:"2026-27", goal:GOAL,
+      totalCollected:total, remaining,
+      progressPercent:parseFloat(pct.toFixed(2)),
+      entries, projectedIncome:PROJECTED,
+      exportedAt:new Date().toISOString()
+    };
+    dl(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),"FY2026-27_Finance.json");
+    showToast("✓ JSON downloaded");
+  };
+
+  /* ── COPY AS TAB-SEPARATED ── paste directly into Notion table / Google Sheets */
+  const copyTable = () => {
+    const header = "Month\tIncome Source\tName\tAmount\tAccount";
+    const rows   = entries.map(e=>`${e.month}\t${e.income}\t${e.name}\t${e.amount}\t${e.account}`).join("\n");
+    navigator.clipboard.writeText(header+"\n"+rows)
+      .then(()=>showToast("✓ Copied! Paste directly into Notion or Google Sheets"))
+      .catch(()=>showToast("⚠ Copy failed — try CSV export instead"));
+  };
+
+  /* ── COPY SUMMARY ── quick numbers */
+  const copySummary = () => {
+    const txt =
+`FY 2026–27 Finance Summary
+──────────────────────────
+Goal:       ${fmt(GOAL)}
+Collected:  ${fmt(total)}
+Remaining:  ${fmt(remaining)}
+Progress:   ${pct.toFixed(2)}%
+
+Monthly Breakdown:
+${MONTHS.map(m=>{
+  const t=entries.filter(e=>e.month===m).reduce((s,e)=>s+e.amount,0);
+  return t>0?`  ${m.padEnd(10)} ${fmt(t)}`:null;
+}).filter(Boolean).join("\n")}
+
+Projected Max: ${fmtC(projMax)}
+`;
+    navigator.clipboard.writeText(txt)
+      .then(()=>showToast("✓ Summary copied to clipboard"))
+      .catch(()=>showToast("⚠ Copy failed"));
+  };
+
+  const dl = (blob,name) => {
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  };
+
+  const msg = pct>=100?{e:"🏆",t:"Goal Smashed!",s:"Legendary!"}
+            : pct>=75 ?{e:"🔥",t:"Almost there!", s:`${fmtC(remaining)} left`}
+            : pct>=50 ?{e:"⚡",t:"Halfway hero!",  s:`${fmtC(remaining)} to go`}
+            : pct>=25 ?{e:"🚀",t:"Great momentum!",s:"Keep pushing!"}
+            :          {e:"🌱",t:"Journey begins!",s:"Every ₹ counts"};
 
   return (
-    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#07070d 0%,#0e1016 50%,#090c17 100%)",color:"#e8e8f0",fontFamily:"'DM Sans',sans-serif",padding:0,position:"relative",overflowX:"hidden"}}>
+    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#07070d 0%,#0e1016 50%,#090c17 100%)",
+      color:"#e8e8f0",fontFamily:"'DM Sans',sans-serif",padding:0,position:"relative",overflowX:"hidden"}}>
 
-      {/* Confetti */}
-      {confetti && Array.from({length:50}).map((_,i)=>(
-        <div key={i} className="cfp" style={{
-          top:0, left:`${Math.random()*100}%`,
-          width:"7px", height:"7px",
+      {toast && <div className="toast">{toast}</div>}
+
+      {confetti&&Array.from({length:50}).map((_,i)=>(
+        <div key={i} className="cfp" style={{top:0,left:`${Math.random()*100}%`,width:"7px",height:"7px",
           background:["#f59e0b","#34d399","#60a5fa","#f472b6","#c084fc","#fff"][i%6],
-          borderRadius:i%3===0?"50%":"2px",
-          animationDelay:`${Math.random()*1.5}s`
-        }}/>
+          borderRadius:i%3===0?"50%":"2px",animationDelay:`${Math.random()*1.5}s`}}/>
       ))}
 
-      {/* Ambient blobs */}
       <div style={{position:"fixed",top:"-20%",right:"-10%",width:"520px",height:"520px",background:"radial-gradient(circle,rgba(245,158,11,.07),transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",bottom:"-20%",left:"-10%",width:"480px",height:"480px",background:"radial-gradient(circle,rgba(96,165,250,.05),transparent 70%)",pointerEvents:"none"}}/>
 
       <div style={{maxWidth:"840px",margin:"0 auto",padding:"32px 16px 60px"}}>
 
-        {/* ── HEADER ── */}
+        {/* header */}
         <div style={{marginBottom:"32px",display:"flex",alignItems:"flex-start",gap:"12px"}}>
           <div style={{width:"3px",minHeight:"38px",background:"linear-gradient(180deg,#f59e0b,#f472b6)",borderRadius:"2px",marginTop:"4px"}}/>
           <div>
@@ -161,12 +236,10 @@ function App() {
           </div>
         </div>
 
-        {/* ── HERO CARD ── */}
+        {/* hero */}
         <div className="glow" style={{background:"linear-gradient(135deg,rgba(18,16,30,.97),rgba(12,14,24,.98))",
           border:"1px solid rgba(245,158,11,.2)",borderRadius:"18px",padding:"24px",marginBottom:"16px"}}>
           <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:"20px"}}>
-
-            {/* Ring */}
             <div style={{position:"relative",flexShrink:0}}>
               <Ring pct={pct}/>
               <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",textAlign:"center",pointerEvents:"none"}}>
@@ -174,25 +247,18 @@ function App() {
                 <div style={{fontSize:"8px",color:"rgba(255,255,255,.3)",textTransform:"uppercase",letterSpacing:".1em"}}>done</div>
               </div>
             </div>
-
-            {/* Stats */}
             <div style={{flex:1,minWidth:"180px"}}>
               <div style={{fontSize:"10px",color:"rgba(255,255,255,.32)",textTransform:"uppercase",letterSpacing:".12em",fontFamily:"'DM Mono',monospace",marginBottom:"4px"}}>Collected So Far</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(20px,4vw,32px)",fontWeight:700,color:"#fbbf24",lineHeight:1.1}}>
-                <AnimNum value={total}/>
-              </div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(20px,4vw,32px)",fontWeight:700,color:"#fbbf24",lineHeight:1.1}}><AnimNum value={total}/></div>
               <div style={{marginTop:"6px",fontSize:"11px",color:"rgba(255,255,255,.4)"}}>{fmt(remaining)} remaining</div>
               <div style={{marginTop:"14px",height:"5px",background:"rgba(255,255,255,.06)",borderRadius:"3px",overflow:"hidden"}}>
-                <div style={{height:"100%",width:`${Math.min(pct,100)}%`,
-                  background:"linear-gradient(90deg,#d97706,#fbbf24,#fde68a)",borderRadius:"3px",
-                  transition:"width 1.4s cubic-bezier(0.34,1.56,0.64,1)",boxShadow:"0 0 12px rgba(245,158,11,.6)"}}/>
+                <div style={{height:"100%",width:`${Math.min(pct,100)}%`,background:"linear-gradient(90deg,#d97706,#fbbf24,#fde68a)",
+                  borderRadius:"3px",transition:"width 1.4s cubic-bezier(0.34,1.56,0.64,1)",boxShadow:"0 0 12px rgba(245,158,11,.6)"}}/>
               </div>
               <div style={{marginTop:"4px",display:"flex",justifyContent:"space-between",fontSize:"9px",color:"rgba(255,255,255,.2)",fontFamily:"'DM Mono',monospace"}}>
                 <span>₹0</span><span>{fmtC(GOAL)}</span>
               </div>
             </div>
-
-            {/* Badge */}
             <div style={{background:"rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.16)",borderRadius:"13px",padding:"16px 18px",textAlign:"center",minWidth:"120px"}}>
               <div style={{fontSize:"24px",marginBottom:"3px"}}>{msg.e}</div>
               <div style={{fontWeight:600,fontSize:"12px",color:"#fbbf24",marginBottom:"2px"}}>{msg.t}</div>
@@ -201,7 +267,7 @@ function App() {
           </div>
         </div>
 
-        {/* ── PROJECTED ── */}
+        {/* projected */}
         <div style={{background:"rgba(11,13,22,.88)",border:"1px solid rgba(255,255,255,.06)",borderRadius:"16px",padding:"20px",marginBottom:"16px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px",flexWrap:"wrap",gap:"8px"}}>
             <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"16px",fontWeight:700}}>Projected Income</h2>
@@ -230,48 +296,32 @@ function App() {
           </div>
         </div>
 
-        {/* ── MONTHLY ENTRIES ── */}
+        {/* monthly entries */}
         <div style={{background:"rgba(11,13,22,.88)",border:"1px solid rgba(255,255,255,.06)",borderRadius:"16px",padding:"20px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px",flexWrap:"wrap",gap:"8px"}}>
             <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"16px",fontWeight:700}}>Monthly Entries</h2>
-            <button onClick={()=>setShowAdd(!showAdd)} style={{
+            <button onClick={()=>setShowAdd(v=>!v)} style={{
               background:showAdd?"rgba(239,68,68,.1)":"rgba(245,158,11,.1)",
               border:`1px solid ${showAdd?"rgba(239,68,68,.28)":"rgba(245,158,11,.25)"}`,
               color:showAdd?"#f87171":"#fbbf24",borderRadius:"8px",
               padding:"6px 14px",fontSize:"11px",fontWeight:500,transition:"all .18s"}}>
-              {showAdd ? "✕ Cancel" : "+ Add Entry"}
+              {showAdd?"✕ Cancel":"+ Add Entry"}
             </button>
           </div>
 
-          {/* Add Form */}
-          {showAdd && (
-            <div style={{background:"rgba(245,158,11,.04)",border:"1px solid rgba(245,158,11,.1)",borderRadius:"11px",padding:"16px",marginBottom:"16px",
-              display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:"9px",alignItems:"end"}}>
-              <Field k="month"   label="Month"         type="select" opts={MONTHS}/>
-              <Field k="income"  label="Income Source" type="text"   placeholder="e.g. GoML"/>
-              <Field k="name"    label="Name"          type="text"   placeholder="e.g. Meena"/>
-              <Field k="amount"  label="Amount (₹)"    type="number" placeholder="e.g. 30000"/>
-              <Field k="account" label="Account"       type="text"   placeholder="e.g. Union Bank"/>
-              <button onClick={add} style={{background:"linear-gradient(135deg,#d97706,#fbbf24)",border:"none",borderRadius:"7px",padding:"8px",color:"#07070d",fontWeight:700,fontSize:"12px"}}>
-                ✓ Save Entry
-              </button>
-            </div>
-          )}
+          {showAdd&&<AddForm form={form} setForm={setForm} onSave={saveEntry} months={MONTHS}/>}
 
-          {/* Month chips */}
           <div style={{display:"flex",gap:"5px",flexWrap:"wrap",marginBottom:"14px"}}>
-            {MONTHS.map(m => {
-              const has = entries.some(e=>e.month===m);
-              const active = m===month;
+            {MONTHS.map(m=>{
+              const has=entries.some(e=>e.month===m),active=m===month;
               return (
                 <button key={m} className="chip" onClick={()=>setMonth(m)} style={{
                   background:active?"rgba(245,158,11,.16)":"rgba(255,255,255,.04)",
                   border:`1px solid ${active?"rgba(245,158,11,.4)":"rgba(255,255,255,.06)"}`,
-                  borderRadius:"6px",padding:"4px 9px",
-                  color:active?"#fbbf24":"rgba(255,255,255,.4)",
+                  borderRadius:"6px",padding:"4px 9px",color:active?"#fbbf24":"rgba(255,255,255,.4)",
                   fontSize:"10px",fontWeight:active?600:400,position:"relative"}}>
                   {m.slice(0,3)}
-                  {has && <span style={{position:"absolute",top:"-3px",right:"-3px",width:"5px",height:"5px",borderRadius:"50%",background:"#34d399"}}/>}
+                  {has&&<span style={{position:"absolute",top:"-3px",right:"-3px",width:"5px",height:"5px",borderRadius:"50%",background:"#34d399"}}/>}
                 </button>
               );
             })}
@@ -282,38 +332,121 @@ function App() {
             <span style={{fontFamily:"'DM Mono',monospace",fontSize:"13px",fontWeight:500,color:"#fbbf24"}}>{fmt(mT)}</span>
           </div>
 
-          {/* Table */}
           {mE.length===0
-            ? <div style={{textAlign:"center",padding:"32px 16px",color:"rgba(255,255,255,.16)",border:"1px dashed rgba(255,255,255,.07)",borderRadius:"9px"}}>
-                <div style={{fontSize:"22px",marginBottom:"5px"}}>💸</div>
-                <div style={{fontSize:"11px"}}>No entries for {month}</div>
+            ?<div style={{textAlign:"center",padding:"32px 16px",color:"rgba(255,255,255,.16)",border:"1px dashed rgba(255,255,255,.07)",borderRadius:"9px"}}>
+              <div style={{fontSize:"22px",marginBottom:"5px"}}>💸</div>
+              <div style={{fontSize:"11px"}}>No entries for {month}</div>
+            </div>
+            :<div style={{borderRadius:"9px",overflow:"hidden",border:"1px solid rgba(255,255,255,.05)"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1.2fr 1fr 24px",padding:"8px 13px",
+                background:"rgba(255,255,255,.04)",fontSize:"9px",color:"rgba(255,255,255,.28)",
+                textTransform:"uppercase",letterSpacing:".1em",fontFamily:"'DM Mono',monospace"}}>
+                {["Month","Source","Name","Amount","Account",""].map((h,i)=><span key={i}>{h}</span>)}
               </div>
-            : <div style={{borderRadius:"9px",overflow:"hidden",border:"1px solid rgba(255,255,255,.05)"}}>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1.2fr 1fr 24px",padding:"8px 13px",
-                  background:"rgba(255,255,255,.04)",fontSize:"9px",color:"rgba(255,255,255,.28)",
-                  textTransform:"uppercase",letterSpacing:".1em",fontFamily:"'DM Mono',monospace"}}>
-                  {["Month","Source","Name","Amount","Account",""].map((h,i)=><span key={i}>{h}</span>)}
+              {mE.map((e,i)=>(
+                <div key={e.id} className="rw" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1.2fr 1fr 24px",
+                  padding:"10px 13px",alignItems:"center",borderTop:i===0?"none":"1px solid rgba(255,255,255,.04)",transition:"background .14s"}}>
+                  <span style={{fontSize:"11px",color:"rgba(255,255,255,.4)"}}>{e.month}</span>
+                  <span style={{fontSize:"11px"}}>{e.income}</span>
+                  <span style={{fontSize:"11px",color:"rgba(255,255,255,.62)"}}>{e.name}</span>
+                  <span style={{fontFamily:"'DM Mono',monospace",fontSize:"11px",color:"#fbbf24",fontWeight:500}}>{fmt(e.amount)}</span>
+                  <span style={{fontSize:"10px",color:"rgba(255,255,255,.32)"}}>{e.account}</span>
+                  <button className="dx" onClick={()=>setEntries(entries.filter(x=>x.id!==e.id))}
+                    style={{opacity:0,background:"none",border:"none",color:"#ef4444",fontSize:"14px",transition:"opacity .14s",padding:0,lineHeight:1}}>×</button>
                 </div>
-                {mE.map((e,i)=>(
-                  <div key={e.id} className="rw" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1.2fr 1fr 24px",
-                    padding:"10px 13px",alignItems:"center",
-                    borderTop:i===0?"none":"1px solid rgba(255,255,255,.04)",transition:"background .14s"}}>
-                    <span style={{fontSize:"11px",color:"rgba(255,255,255,.4)"}}>{e.month}</span>
-                    <span style={{fontSize:"11px"}}>{e.income}</span>
-                    <span style={{fontSize:"11px",color:"rgba(255,255,255,.62)"}}>{e.name}</span>
-                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:"11px",color:"#fbbf24",fontWeight:500}}>{fmt(e.amount)}</span>
-                    <span style={{fontSize:"10px",color:"rgba(255,255,255,.32)"}}>{e.account}</span>
-                    <button className="dx" onClick={()=>setEntries(entries.filter(x=>x.id!==e.id))}
-                      style={{opacity:0,background:"none",border:"none",color:"#ef4444",fontSize:"14px",transition:"opacity .14s",padding:0,lineHeight:1}}>×</button>
-                  </div>
-                ))}
-              </div>
+              ))}
+            </div>
           }
 
-          {/* Total bar */}
-          <div style={{marginTop:"13px",padding:"11px 13px",background:"rgba(245,158,11,.05)",border:"1px solid rgba(245,158,11,.1)",borderRadius:"8px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          {/* total */}
+          <div style={{marginTop:"13px",padding:"11px 13px",background:"rgba(245,158,11,.05)",
+            border:"1px solid rgba(245,158,11,.1)",borderRadius:"8px",
+            display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span style={{fontSize:"10px",color:"rgba(255,255,255,.3)",textTransform:"uppercase",letterSpacing:".1em",fontFamily:"'DM Mono',monospace"}}>Total · All Months</span>
             <span style={{fontFamily:"'DM Mono',monospace",fontSize:"16px",fontWeight:500,color:"#fbbf24"}}><AnimNum value={total}/></span>
+          </div>
+        </div>
+
+        {/* ── EXPORT PANEL ── */}
+        <div style={{marginTop:"16px",background:"rgba(11,13,22,.88)",border:"1px solid rgba(255,255,255,.06)",borderRadius:"16px",padding:"20px"}}>
+          <div style={{marginBottom:"14px"}}>
+            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"16px",fontWeight:700,marginBottom:"4px"}}>Export & Analysis</h2>
+            <p style={{fontSize:"11px",color:"rgba(255,255,255,.35)"}}>Download your data or copy for direct paste into Notion / Google Sheets</p>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:"10px"}}>
+
+            {/* CSV */}
+            <button className="xbtn" onClick={exportCSV} style={{background:"rgba(52,211,153,.1)",border:"1px solid rgba(52,211,153,.25)",color:"#34d399",flexDirection:"column",alignItems:"flex-start",padding:"14px 16px",borderRadius:"12px",gap:"3px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:"7px",marginBottom:"3px"}}>
+                <span style={{fontSize:"18px"}}>📊</span>
+                <span style={{fontSize:"13px",fontWeight:700}}>Download CSV</span>
+              </div>
+              <span style={{fontSize:"10px",color:"rgba(52,211,153,.6)",fontWeight:400}}>Excel · Google Sheets · Numbers</span>
+            </button>
+
+            {/* JSON */}
+            <button className="xbtn" onClick={exportJSON} style={{background:"rgba(96,165,250,.1)",border:"1px solid rgba(96,165,250,.25)",color:"#60a5fa",flexDirection:"column",alignItems:"flex-start",padding:"14px 16px",borderRadius:"12px",gap:"3px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:"7px",marginBottom:"3px"}}>
+                <span style={{fontSize:"18px"}}>🗂</span>
+                <span style={{fontSize:"13px",fontWeight:700}}>Download JSON</span>
+              </div>
+              <span style={{fontSize:"10px",color:"rgba(96,165,250,.6)",fontWeight:400}}>For apps · APIs · custom tools</span>
+            </button>
+
+            {/* Copy table */}
+            <button className="xbtn" onClick={copyTable} style={{background:"rgba(167,139,250,.1)",border:"1px solid rgba(167,139,250,.25)",color:"#a78bfa",flexDirection:"column",alignItems:"flex-start",padding:"14px 16px",borderRadius:"12px",gap:"3px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:"7px",marginBottom:"3px"}}>
+                <span style={{fontSize:"18px"}}>📋</span>
+                <span style={{fontSize:"13px",fontWeight:700}}>Copy as Table</span>
+              </div>
+              <span style={{fontSize:"10px",color:"rgba(167,139,250,.6)",fontWeight:400}}>Paste into Notion table</span>
+            </button>
+
+            {/* Copy summary */}
+            <button className="xbtn" onClick={copySummary} style={{background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.25)",color:"#fbbf24",flexDirection:"column",alignItems:"flex-start",padding:"14px 16px",borderRadius:"12px",gap:"3px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:"7px",marginBottom:"3px"}}>
+                <span style={{fontSize:"18px"}}>📝</span>
+                <span style={{fontSize:"13px",fontWeight:700}}>Copy Summary</span>
+              </div>
+              <span style={{fontSize:"10px",color:"rgba(245,158,11,.6)",fontWeight:400}}>Quick text snapshot</span>
+            </button>
+
+          </div>
+
+          {/* per-source breakdown */}
+          <div style={{marginTop:"16px",borderTop:"1px solid rgba(255,255,255,.05)",paddingTop:"16px"}}>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,.28)",textTransform:"uppercase",letterSpacing:".1em",fontFamily:"'DM Mono',monospace",marginBottom:"10px"}}>Income Breakdown by Source</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:"8px"}}>
+              {Object.entries(entries.reduce((acc,e)=>{acc[e.income]=(acc[e.income]||0)+e.amount;return acc;},{}))
+                .sort((a,b)=>b[1]-a[1])
+                .map(([src,amt])=>(
+                <div key={src} style={{background:"rgba(255,255,255,.03)",borderRadius:"9px",padding:"11px 13px",border:"1px solid rgba(255,255,255,.05)"}}>
+                  <div style={{fontSize:"11px",fontWeight:500,marginBottom:"3px"}}>{src}</div>
+                  <div style={{fontFamily:"'DM Mono',monospace",fontSize:"13px",color:"#fbbf24",fontWeight:500}}>{fmt(amt)}</div>
+                  <div style={{fontSize:"9px",color:"rgba(255,255,255,.28)",marginTop:"2px"}}>{((amt/total)*100).toFixed(1)}% of total</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* per-month breakdown */}
+          <div style={{marginTop:"14px"}}>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,.28)",textTransform:"uppercase",letterSpacing:".1em",fontFamily:"'DM Mono',monospace",marginBottom:"10px"}}>Monthly Totals</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:"6px"}}>
+              {MONTHS.map(m=>{
+                const t=entries.filter(e=>e.month===m).reduce((s,e)=>s+e.amount,0);
+                return (
+                  <div key={m} style={{background:"rgba(255,255,255,.025)",borderRadius:"8px",padding:"9px 11px",
+                    border:`1px solid ${t>0?"rgba(245,158,11,.15)":"rgba(255,255,255,.04)"}`}}>
+                    <div style={{fontSize:"10px",color:"rgba(255,255,255,.4)",marginBottom:"3px"}}>{m.slice(0,3)}</div>
+                    <div style={{fontFamily:"'DM Mono',monospace",fontSize:"12px",color:t>0?"#fbbf24":"rgba(255,255,255,.2)",fontWeight:t>0?500:400}}>
+                      {t>0?fmtC(t):"—"}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
